@@ -1,5 +1,6 @@
 import { Answer } from "./interfaces/answer";
 import { Question, QuestionType } from "./interfaces/question";
+import { duplicateQuestion, makeBlankQuestion } from "./objects";
 
 /**
  * Consumes an array of questions and returns a new array with only the questions
@@ -116,7 +117,12 @@ export function toCSV(questions: Question[]): string {
  * making the `text` an empty string, and using false for both `submitted` and `correct`.
  */
 export function makeAnswers(questions: Question[]): Answer[] {
-    return [];
+    return questions.map((q) => ({
+        questionId: q.id,
+        text: "",
+        submitted: false,
+        correct: false,
+    }));
 }
 
 /***
@@ -124,7 +130,7 @@ export function makeAnswers(questions: Question[]): Answer[] {
  * each question is now published, regardless of its previous published status.
  */
 export function publishAll(questions: Question[]): Question[] {
-    return [];
+    return questions.map((q) => ({ ...q, published: true }));
 }
 
 /***
@@ -132,7 +138,14 @@ export function publishAll(questions: Question[]): Question[] {
  * are the same type. They can be any type, as long as they are all the SAME type.
  */
 export function sameType(questions: Question[]): boolean {
-    return false;
+    const q_type: QuestionType = questions[0]?.type;
+    let are_same_t: boolean = true;
+    questions.forEach((q) => {
+        if (q.type !== q_type) {
+            are_same_t = false;
+        }
+    });
+    return are_same_t;
 }
 
 /***
@@ -146,7 +159,7 @@ export function addNewQuestion(
     name: string,
     type: QuestionType,
 ): Question[] {
-    return [];
+    return [...questions, makeBlankQuestion(id, name, type)];
 }
 
 /***
@@ -159,7 +172,10 @@ export function renameQuestionById(
     targetId: number,
     newName: string,
 ): Question[] {
-    return [];
+    return questions.map((q) => ({
+        ...q,
+        name: targetId === q.id ? newName : q.name,
+    }));
 }
 
 /***
@@ -174,7 +190,20 @@ export function changeQuestionTypeById(
     targetId: number,
     newQuestionType: QuestionType,
 ): Question[] {
-    return [];
+    return questions.map((q) => {
+        if (q.id === targetId) {
+            return {
+                ...q,
+                type: newQuestionType,
+                options:
+                    newQuestionType === "short_answer_question" ?
+                        []
+                    :   q.options,
+            };
+        } else {
+            return q;
+        }
+    });
 }
 
 /**
@@ -187,13 +216,31 @@ export function changeQuestionTypeById(
  * Remember, if a function starts getting too complicated, think about how a helper function
  * can make it simpler! Break down complicated tasks into little pieces.
  */
+
+//helper functions? I don't even know her!
 export function editOption(
     questions: Question[],
     targetId: number,
     targetOptionIndex: number,
     newOption: string,
 ): Question[] {
-    return [];
+    return questions.map((q) => {
+        if (q.id !== targetId) {
+            return q;
+        }
+        if (targetOptionIndex < 0) {
+            return {
+                ...q,
+                options: [...q.options, newOption],
+            };
+        }
+        return {
+            ...q,
+            options: q.options.map((option, i) =>
+                i === targetOptionIndex ? newOption : option,
+            ),
+        };
+    });
 }
 
 /***
@@ -207,5 +254,10 @@ export function duplicateQuestionInArray(
     targetId: number,
     newId: number,
 ): Question[] {
-    return [];
+    return questions.flatMap((q) => {
+        if (targetId === q.id) {
+            return [q, duplicateQuestion(newId, q)];
+        }
+        return q;
+    });
 }
