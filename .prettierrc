@@ -4,3 +4,7 @@
     "semi": true,
     "singleQuote": false
 }
+{
+    "experimentalTernaries": true,
+    "tabWidth": 4
+}
